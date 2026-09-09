@@ -6,6 +6,9 @@ struct WatchCategory: Identifiable, Hashable {
     let g: String
     let m: String
     let curl: String
+    /// Mô tả điều kiện lọc bằng tiếng Việt dễ hiểu (tên hãng/chất liệu...) thay vì hiện thẳng
+    /// mã số g/m thô — tra 1 lần từ listManufacture của API rồi ghi cứng ở đây.
+    let friendlyFilter: String
 
     /// Link web gốc khớp đúng điều kiện đang lọc (g/m) — hiện trong app để đối chiếu, bấm mở
     /// được ra Safari xem trực tiếp trên dienmayxanh.com.
@@ -17,26 +20,17 @@ struct WatchCategory: Identifiable, Hashable {
         if !items.isEmpty { components.queryItems = items }
         return components.url!
     }
-
-    /// Chuỗi hiển thị ngắn gọn điều kiện đang lọc — không hiện "g="/"m=" thô, chỉ hiện đủ để
-    /// biết đây là bộ lọc gì (đối chiếu bằng link webURL bên trên là chính xác nhất).
-    var filterSummary: String {
-        var parts: [String] = []
-        if !g.isEmpty { parts.append(g) }
-        if !m.isEmpty { parts.append("mã: \(m)") }
-        return parts.isEmpty ? "(không lọc thêm)" : parts.joined(separator: " · ")
-    }
 }
 
 enum WatchCategories {
     static let all: [WatchCategory] = [
-        WatchCategory(id: "may-xay-sinh-to", displayName: "Máy xay sinh tố", g: "nhua", m: "813,2225,23741,869", curl: "may-xay-sinh-to"),
-        WatchCategory(id: "may-ep-trai-cay", displayName: "Máy ép trái cây", g: "may-ep-trai-cay", m: "23733,1694,871,847", curl: "may-ep-trai-cay"),
-        WatchCategory(id: "may-danh-trung", displayName: "Máy đánh trứng", g: "", m: "27005,2307,2313", curl: "may-danh-trung"),
-        WatchCategory(id: "may-vat-cam", displayName: "Máy vắt cam", g: "", m: "26988,34555,40326", curl: "may-vat-cam"),
-        WatchCategory(id: "binh-thuy-dien-panasonic", displayName: "Bình thủy điện", g: "", m: "671,31402", curl: "binh-thuy-dien-panasonic"),
-        WatchCategory(id: "binh-dun-sieu-toc", displayName: "Bình đun siêu tốc", g: "hien-thi-nhiet-do-co-the-cai-dat-nhiet-do-soi-cua-nuoc", m: "", curl: "binh-dun-sieu-toc"),
-        WatchCategory(id: "may-loc-nuoc", displayName: "Máy lọc nước", g: "", m: "", curl: "may-loc-nuoc"),
-        WatchCategory(id: "tu-dong", displayName: "Tủ đông", g: "", m: "", curl: "tu-dong"),
+        WatchCategory(id: "may-xay-sinh-to", displayName: "Máy xay sinh tố", g: "nhua", m: "813,2225,23741,869", curl: "may-xay-sinh-to", friendlyFilter: "Chất liệu nhựa · Philips, Toshiba, Panasonic, Hafele"),
+        WatchCategory(id: "may-ep-trai-cay", displayName: "Máy ép trái cây", g: "may-ep-trai-cay", m: "23733,1694,871,847", curl: "may-ep-trai-cay", friendlyFilter: "Hafele, AVA, Panasonic, Philips"),
+        WatchCategory(id: "may-danh-trung", displayName: "Máy đánh trứng", g: "", m: "27005,2307,2313", curl: "may-danh-trung", friendlyFilter: "AVA, Philips, Panasonic"),
+        WatchCategory(id: "may-vat-cam", displayName: "Máy vắt cam", g: "", m: "26988,34555,40326", curl: "may-vat-cam", friendlyFilter: "AVA, Philips, Hafele"),
+        WatchCategory(id: "binh-thuy-dien-panasonic", displayName: "Bình thủy điện", g: "", m: "671,31402", curl: "binh-thuy-dien-panasonic", friendlyFilter: "Toshiba, AVA"),
+        WatchCategory(id: "binh-dun-sieu-toc", displayName: "Bình đun siêu tốc", g: "hien-thi-nhiet-do-co-the-cai-dat-nhiet-do-soi-cua-nuoc", m: "", curl: "binh-dun-sieu-toc", friendlyFilter: "Có hiển thị / cài đặt nhiệt độ sôi"),
+        WatchCategory(id: "may-loc-nuoc", displayName: "Máy lọc nước", g: "", m: "", curl: "may-loc-nuoc", friendlyFilter: "Tất cả hãng"),
+        WatchCategory(id: "tu-dong", displayName: "Tủ đông", g: "", m: "", curl: "tu-dong", friendlyFilter: "Tất cả hãng"),
     ]
 }

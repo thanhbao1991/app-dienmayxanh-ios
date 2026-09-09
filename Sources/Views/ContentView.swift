@@ -79,7 +79,7 @@ struct ContentView: View {
         Link(destination: selectedCategory.webURL) {
             HStack(spacing: 4) {
                 Image(systemName: "line.3.horizontal.decrease.circle")
-                Text(selectedCategory.filterSummary)
+                Text(selectedCategory.friendlyFilter)
                     .lineLimit(1)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
