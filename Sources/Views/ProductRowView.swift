@@ -2,10 +2,11 @@ import SwiftUI
 
 struct ProductRowView: View {
     let product: Product
+    let category: WatchCategory
     var locationName: String? = nil
 
     var body: some View {
-        Link(destination: product.productLink ?? URL(string: "https://www.dienmayxanh.com")!) {
+        Link(destination: product.productLink(category: category) ?? URL(string: "https://www.dienmayxanh.com")!) {
             HStack(alignment: .top, spacing: 12) {
                 AsyncImage(url: URL(string: product.thumbnail)) { phase in
                     switch phase {

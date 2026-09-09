@@ -91,7 +91,7 @@ struct ContentView: View {
                     }
                     Section {
                         ForEach(items, id: \.product.id) { item in
-                            ProductRowView(product: item.product, locationName: item.location.displayName)
+                            ProductRowView(product: item.product, category: selectedCategory, locationName: item.location.displayName)
                         }
                     } header: {
                         Text("\(items.count) máy · 3 khu vực")
