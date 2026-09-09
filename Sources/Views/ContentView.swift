@@ -14,6 +14,10 @@ struct ContentView: View {
         "binh-dun-sieu-toc": "bolt.fill",
         "may-loc-nuoc": "cylinder.fill",
         "tu-dong": "cube.fill",
+        "lo-vi-song": "square.grid.3x3.fill",
+        "may-nuoc-nong": "thermometer.sun.fill",
+        "quat": "wind",
+        "may-pha-ca-phe": "cup.and.saucer.fill",
     ]
 
     private var selectedLocations: [WatchLocation] {
