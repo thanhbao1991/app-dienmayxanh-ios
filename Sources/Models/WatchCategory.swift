@@ -36,5 +36,7 @@ enum WatchCategories {
         WatchCategory(id: "may-nuoc-nong", displayName: "Máy nước nóng", g: "", m: "", curl: "may-nuoc-nong", friendlyFilter: "Tất cả hãng"),
         WatchCategory(id: "quat", displayName: "Quạt", g: "", m: "", curl: "quat", friendlyFilter: "Tất cả hãng"),
         WatchCategory(id: "may-pha-ca-phe", displayName: "Máy pha cà phê", g: "", m: "", curl: "may-pha-ca-phe", friendlyFilter: "Tất cả hãng"),
+        WatchCategory(id: "bep-ga-don", displayName: "Bếp ga đơn", g: "don", m: "", curl: "bep-ga", friendlyFilter: "Bếp ga đơn"),
+        WatchCategory(id: "noi-ap-suat-philips", displayName: "Nồi áp suất Philips", g: "", m: "", curl: "noi-ap-suat-philips", friendlyFilter: "Philips"),
     ]
 }

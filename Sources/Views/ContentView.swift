@@ -18,6 +18,8 @@ struct ContentView: View {
         "may-nuoc-nong": "thermometer.sun.fill",
         "quat": "wind",
         "may-pha-ca-phe": "cup.and.saucer.fill",
+        "bep-ga-don": "flame.circle.fill",
+        "noi-ap-suat-philips": "gauge.with.dots.needle.67percent",
     ]
 
     private var selectedLocations: [WatchLocation] {
