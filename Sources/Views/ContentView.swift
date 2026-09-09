@@ -66,7 +66,6 @@ struct ContentView: View {
     @ViewBuilder
     private var rightPane: some View {
         let items = viewModel.items(selectedCategory)
-        let errors = viewModel.errors(selectedCategory)
 
         Group {
             if items.isEmpty && viewModel.isLoading(selectedCategory) {
@@ -75,20 +74,10 @@ struct ContentView: View {
                 VStack(spacing: 8) {
                     Image(systemName: "tray").font(.system(size: 28)).foregroundStyle(.secondary)
                     Text("Không có sản phẩm nào phù hợp").font(.caption).foregroundStyle(.secondary)
-                    if !errors.isEmpty {
-                        Text("Lỗi tải \(errors.count) khu vực").font(.caption2).foregroundStyle(.red)
-                    }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    if !errors.isEmpty {
-                        Section {
-                            Text("Lỗi tải: \(errors.map(\.location.displayName).joined(separator: ", "))")
-                                .font(.caption2)
-                                .foregroundStyle(.red)
-                        }
-                    }
                     Section {
                         ForEach(items, id: \.product.id) { item in
                             ProductRowView(product: item.product, category: selectedCategory, locationName: item.location.displayName)

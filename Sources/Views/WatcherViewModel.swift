@@ -27,32 +27,44 @@ final class WatcherViewModel {
         }
     }
 
+    /// Retry 1 lần khi lỗi — gọi đồng thời 3 khu vực đôi khi bị WAF của thegioididong.com chặn
+    /// nhầm 1-2 request (giống rate-limit), retry ngay sau đó thường qua.
     func load(_ tab: WatchTab) async {
         states[tab.id] = .loading
-        do {
-            let data = try await DmxApiClient.fetchProducts(category: tab.category, location: tab.location)
-            states[tab.id] = .loaded(data.listProductsVM)
-        } catch {
-            states[tab.id] = .failed(error.localizedDescription)
+        if let products = await fetchWithRetry(tab) {
+            states[tab.id] = .loaded(products)
+        } else {
+            states[tab.id] = .failed("network")
         }
+    }
+
+    private func fetchWithRetry(_ tab: WatchTab, attempts: Int = 2) async -> [Product]? {
+        for attempt in 1...attempts {
+            do {
+                let data = try await DmxApiClient.fetchProducts(category: tab.category, location: tab.location)
+                return data.listProductsVM
+            } catch {
+                if attempt < attempts {
+                    try? await Task.sleep(nanoseconds: 500_000_000)
+                }
+            }
+        }
+        return nil
     }
 
     // MARK: - Gộp 3 khu vực cho 1 loại máy đang chọn ở sidebar
 
-    /// Chỉ tải 3 khu vực của loại máy đang xem (không tải 7 loại x 3 khu vực cùng lúc).
+    /// Chỉ tải 3 khu vực của loại máy đang xem (không tải 7 loại x 3 khu vực cùng lúc). Gọi
+    /// TUẦN TỰ (không song song) — 3 request đồng thời từng bị WAF chặn nhầm 1-2 request.
     func loadCategoryIfNeeded(_ category: WatchCategory) async {
-        await withTaskGroup(of: Void.self) { group in
-            for location in WatchLocations.all {
-                group.addTask { await self.loadIfNeeded(WatchTab(category: category, location: location)) }
-            }
+        for location in WatchLocations.all {
+            await loadIfNeeded(WatchTab(category: category, location: location))
         }
     }
 
     func reloadCategory(_ category: WatchCategory) async {
-        await withTaskGroup(of: Void.self) { group in
-            for location in WatchLocations.all {
-                group.addTask { await self.load(WatchTab(category: category, location: location)) }
-            }
+        for location in WatchLocations.all {
+            await load(WatchTab(category: category, location: location))
         }
     }
 
@@ -65,17 +77,9 @@ final class WatcherViewModel {
         }
     }
 
-    func errors(_ category: WatchCategory) -> [(location: WatchLocation, message: String)] {
-        WatchLocations.all.compactMap { location in
-            if case .failed(let message) = state(WatchTab(category: category, location: location)) {
-                return (location, message)
-            }
-            return nil
-        }
-    }
-
     /// Danh sách sản phẩm gộp cả 3 khu vực, mỗi sản phẩm kèm khu vực để hiển thị ghi chú dưới tên.
-    /// Sắp theo giá tăng dần.
+    /// Sắp theo giá tăng dần. Khu vực lỗi/hết hàng đều coi như không có sản phẩm — không báo lỗi
+    /// riêng, tránh làm phiền vì phần lớn trường hợp chỉ đơn giản là khu vực đó hết hàng.
     func items(_ category: WatchCategory) -> [(location: WatchLocation, product: Product)] {
         var result: [(WatchLocation, Product)] = []
         for location in WatchLocations.all {
