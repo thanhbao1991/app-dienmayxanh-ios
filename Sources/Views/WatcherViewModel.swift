@@ -79,13 +79,17 @@ final class WatcherViewModel {
 
     /// Danh sách sản phẩm gộp các khu vực đang chọn, mỗi sản phẩm kèm khu vực để hiển thị ghi
     /// chú dưới tên. Sắp theo giá tăng dần. Khu vực lỗi/hết hàng đều coi như không có sản phẩm.
-    func items(_ category: WatchCategory, locations: [WatchLocation]) -> [(location: WatchLocation, product: Product)] {
-        var result: [(WatchLocation, Product)] = []
+    ///
+    /// Cùng 1 sản phẩm (productId) có thể tồn kho ở nhiều khu vực khác nhau cùng lúc — id của
+    /// mỗi dòng PHẢI gồm cả khu vực lẫn productId (LocationProductRow.id), không được chỉ dùng
+    /// productId, nếu không SwiftUI List sẽ lẫn dữ liệu/nhãn khu vực giữa các dòng trùng id.
+    func items(_ category: WatchCategory, locations: [WatchLocation]) -> [LocationProductRow] {
+        var result: [LocationProductRow] = []
         for location in locations {
             if case .loaded(let products) = state(WatchTab(category: category, location: location)) {
-                result.append(contentsOf: products.map { (location, $0) })
+                result.append(contentsOf: products.map { LocationProductRow(location: location, product: $0) })
             }
         }
-        return result.sorted { $0.1.minPrice < $1.1.minPrice }
+        return result.sorted { $0.product.minPrice < $1.product.minPrice }
     }
 }

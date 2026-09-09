@@ -123,7 +123,7 @@ struct ContentView: View {
             } else {
                 List {
                     Section {
-                        ForEach(items, id: \.product.id) { item in
+                        ForEach(items) { item in
                             ProductRowView(product: item.product, category: selectedCategory, locationName: item.location.displayName)
                         }
                     } header: {
