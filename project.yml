@@ -1,0 +1,30 @@
+name: DienMayXanhIOS
+options:
+  bundleIdPrefix: uk.denncoffee
+  deploymentTarget:
+    iOS: "17.0"
+settings:
+  DEVELOPMENT_TEAM: ""
+targets:
+  DienMayXanhIOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources
+    info:
+      path: Sources/Info.plist
+      properties:
+        CFBundleDisplayName: DMX Đổi Trả
+        CFBundleShortVersionString: "1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        UIRequiresFullScreen: true
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: uk.denncoffee.dienmayxanhios
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_VERSION: "5.0"
