@@ -8,6 +8,8 @@ struct ContentView: View {
         "may-xay-sinh-to": "drop.fill",
         "may-ep-trai-cay": "carrot.fill",
         "may-danh-trung": "fork.knife",
+        "may-vat-cam": "circle.grid.2x2.fill",
+        "binh-thuy-dien-panasonic": "flame.fill",
     ]
 
     var body: some View {
