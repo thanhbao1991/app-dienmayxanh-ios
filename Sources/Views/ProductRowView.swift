@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProductRowView: View {
     let product: Product
+    var locationName: String? = nil
 
     var body: some View {
         Link(destination: product.productLink ?? URL(string: "https://www.dienmayxanh.com")!) {
@@ -55,9 +56,16 @@ struct ProductRowView: View {
                         }
                     }
 
-                    Text(product.inStock ? "Còn \(product.sumQuantity) máy" : "Hết hàng")
-                        .font(.caption2)
-                        .foregroundStyle(product.inStock ? .green : .secondary)
+                    HStack(spacing: 6) {
+                        Text(product.inStock ? "Còn \(product.sumQuantity) máy" : "Hết hàng")
+                            .foregroundStyle(product.inStock ? .green : .secondary)
+
+                        if let locationName {
+                            Text("· 📍 \(locationName)")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .font(.caption2)
                 }
             }
         }
