@@ -6,6 +6,26 @@ struct WatchCategory: Identifiable, Hashable {
     let g: String
     let m: String
     let curl: String
+
+    /// Link web gốc khớp đúng điều kiện đang lọc (g/m) — hiện trong app để đối chiếu, bấm mở
+    /// được ra Safari xem trực tiếp trên dienmayxanh.com.
+    var webURL: URL {
+        var components = URLComponents(string: "https://www.dienmayxanh.com/may-doi-tra/\(curl)")!
+        var items: [URLQueryItem] = []
+        if !g.isEmpty { items.append(URLQueryItem(name: "g", value: g)) }
+        if !m.isEmpty { items.append(URLQueryItem(name: "m", value: m)) }
+        if !items.isEmpty { components.queryItems = items }
+        return components.url!
+    }
+
+    /// Chuỗi hiển thị ngắn gọn điều kiện đang lọc — không hiện "g="/"m=" thô, chỉ hiện đủ để
+    /// biết đây là bộ lọc gì (đối chiếu bằng link webURL bên trên là chính xác nhất).
+    var filterSummary: String {
+        var parts: [String] = []
+        if !g.isEmpty { parts.append(g) }
+        if !m.isEmpty { parts.append("mã: \(m)") }
+        return parts.isEmpty ? "(không lọc thêm)" : parts.joined(separator: " · ")
+    }
 }
 
 enum WatchCategories {

@@ -26,6 +26,7 @@ struct ContentView: View {
                 sidebar
                 Divider()
                 VStack(spacing: 0) {
+                    filterSummaryBar
                     locationCheckboxes
                     Divider()
                     rightPane
@@ -71,6 +72,24 @@ struct ContentView: View {
         }
         .frame(width: 108)
         .background(Color(.secondarySystemGroupedBackground))
+    }
+
+    /// Hiện điều kiện đang lọc của tab đang chọn — bấm mở web gốc để đối chiếu.
+    private var filterSummaryBar: some View {
+        Link(destination: selectedCategory.webURL) {
+            HStack(spacing: 4) {
+                Image(systemName: "line.3.horizontal.decrease.circle")
+                Text(selectedCategory.filterSummary)
+                    .lineLimit(1)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+            }
+            .font(.caption2)
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 12)
+            .padding(.top, 8)
+        }
+        .buttonStyle(.plain)
     }
 
     /// Checkbox chọn khu vực — bấm khu vực nào thì tải/gỡ đúng khu vực đó, mặc định check cả 3.
