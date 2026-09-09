@@ -27,8 +27,8 @@ final class WatcherViewModel {
         }
     }
 
-    /// Retry 1 lần khi lỗi — gọi đồng thời 3 khu vực đôi khi bị WAF của thegioididong.com chặn
-    /// nhầm 1-2 request (giống rate-limit), retry ngay sau đó thường qua.
+    /// Retry 1 lần khi lỗi — gọi đồng thời nhiều khu vực đôi khi bị WAF của thegioididong.com
+    /// chặn nhầm 1-2 request (giống rate-limit), retry ngay sau đó thường qua.
     func load(_ tab: WatchTab) async {
         states[tab.id] = .loading
         if let products = await fetchWithRetry(tab) {
@@ -52,24 +52,24 @@ final class WatcherViewModel {
         return nil
     }
 
-    // MARK: - Gộp 3 khu vực cho 1 loại máy đang chọn ở sidebar
+    // MARK: - Gộp các khu vực ĐANG CHỌN (checkbox) cho 1 loại máy đang chọn ở sidebar
 
-    /// Chỉ tải 3 khu vực của loại máy đang xem (không tải 7 loại x 3 khu vực cùng lúc). Gọi
-    /// TUẦN TỰ (không song song) — 3 request đồng thời từng bị WAF chặn nhầm 1-2 request.
-    func loadCategoryIfNeeded(_ category: WatchCategory) async {
-        for location in WatchLocations.all {
+    /// Chỉ tải các khu vực đang được check (không tải khu vực đã bỏ check, không tải loại máy
+    /// khác). Gọi TUẦN TỰ (không song song) — nhiều request đồng thời từng bị WAF chặn nhầm.
+    func loadCategoryIfNeeded(_ category: WatchCategory, locations: [WatchLocation]) async {
+        for location in locations {
             await loadIfNeeded(WatchTab(category: category, location: location))
         }
     }
 
-    func reloadCategory(_ category: WatchCategory) async {
-        for location in WatchLocations.all {
+    func reloadCategory(_ category: WatchCategory, locations: [WatchLocation]) async {
+        for location in locations {
             await load(WatchTab(category: category, location: location))
         }
     }
 
-    func isLoading(_ category: WatchCategory) -> Bool {
-        WatchLocations.all.contains { location in
+    func isLoading(_ category: WatchCategory, locations: [WatchLocation]) -> Bool {
+        locations.contains { location in
             switch state(WatchTab(category: category, location: location)) {
             case .idle, .loading: return true
             default: return false
@@ -77,12 +77,11 @@ final class WatcherViewModel {
         }
     }
 
-    /// Danh sách sản phẩm gộp cả 3 khu vực, mỗi sản phẩm kèm khu vực để hiển thị ghi chú dưới tên.
-    /// Sắp theo giá tăng dần. Khu vực lỗi/hết hàng đều coi như không có sản phẩm — không báo lỗi
-    /// riêng, tránh làm phiền vì phần lớn trường hợp chỉ đơn giản là khu vực đó hết hàng.
-    func items(_ category: WatchCategory) -> [(location: WatchLocation, product: Product)] {
+    /// Danh sách sản phẩm gộp các khu vực đang chọn, mỗi sản phẩm kèm khu vực để hiển thị ghi
+    /// chú dưới tên. Sắp theo giá tăng dần. Khu vực lỗi/hết hàng đều coi như không có sản phẩm.
+    func items(_ category: WatchCategory, locations: [WatchLocation]) -> [(location: WatchLocation, product: Product)] {
         var result: [(WatchLocation, Product)] = []
-        for location in WatchLocations.all {
+        for location in locations {
             if case .loaded(let products) = state(WatchTab(category: category, location: location)) {
                 result.append(contentsOf: products.map { (location, $0) })
             }

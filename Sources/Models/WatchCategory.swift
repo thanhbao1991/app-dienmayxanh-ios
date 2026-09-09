@@ -17,5 +17,6 @@ enum WatchCategories {
         WatchCategory(id: "binh-thuy-dien-panasonic", displayName: "Bình thủy điện", g: "", m: "671,31402", curl: "binh-thuy-dien-panasonic"),
         WatchCategory(id: "binh-dun-sieu-toc", displayName: "Bình đun siêu tốc", g: "hien-thi-nhiet-do-co-the-cai-dat-nhiet-do-soi-cua-nuoc", m: "", curl: "binh-dun-sieu-toc"),
         WatchCategory(id: "may-loc-nuoc", displayName: "Máy lọc nước", g: "", m: "", curl: "may-loc-nuoc"),
+        WatchCategory(id: "tu-dong", displayName: "Tủ đông", g: "", m: "", curl: "tu-dong"),
     ]
 }

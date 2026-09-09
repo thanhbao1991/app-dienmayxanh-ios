@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var viewModel = WatcherViewModel()
     @State private var selectedCategory: WatchCategory = WatchCategories.all[0]
+    @State private var selectedLocationIds: Set<String> = Set(WatchLocations.all.map(\.id))
 
     private static let categoryIcons: [String: String] = [
         "may-xay-sinh-to": "drop.fill",
@@ -12,14 +13,23 @@ struct ContentView: View {
         "binh-thuy-dien-panasonic": "flame.fill",
         "binh-dun-sieu-toc": "bolt.fill",
         "may-loc-nuoc": "cylinder.fill",
+        "tu-dong": "cube.fill",
     ]
+
+    private var selectedLocations: [WatchLocation] {
+        WatchLocations.all.filter { selectedLocationIds.contains($0.id) }
+    }
 
     var body: some View {
         NavigationStack {
             HStack(spacing: 0) {
                 sidebar
                 Divider()
-                rightPane
+                VStack(spacing: 0) {
+                    locationCheckboxes
+                    Divider()
+                    rightPane
+                }
             }
             .navigationTitle("Máy đổi trả DMX")
             .navigationBarTitleDisplayMode(.inline)
@@ -63,12 +73,46 @@ struct ContentView: View {
         .background(Color(.secondarySystemGroupedBackground))
     }
 
+    /// Checkbox chọn khu vực — bấm khu vực nào thì tải/gỡ đúng khu vực đó, mặc định check cả 3.
+    private var locationCheckboxes: some View {
+        HStack(spacing: 8) {
+            ForEach(WatchLocations.all) { location in
+                let isOn = selectedLocationIds.contains(location.id)
+                Button {
+                    if isOn {
+                        selectedLocationIds.remove(location.id)
+                    } else {
+                        selectedLocationIds.insert(location.id)
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: isOn ? "checkmark.square.fill" : "square")
+                            .foregroundStyle(isOn ? Color.accentColor : .secondary)
+                        Text(location.displayName)
+                            .font(.system(size: 12))
+                            .foregroundStyle(.primary)
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+    }
+
     @ViewBuilder
     private var rightPane: some View {
-        let items = viewModel.items(selectedCategory)
+        let locations = selectedLocations
+        let items = viewModel.items(selectedCategory, locations: locations)
 
         Group {
-            if items.isEmpty && viewModel.isLoading(selectedCategory) {
+            if locations.isEmpty {
+                VStack(spacing: 8) {
+                    Image(systemName: "square.dashed").font(.system(size: 28)).foregroundStyle(.secondary)
+                    Text("Chọn ít nhất 1 khu vực").font(.caption).foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if items.isEmpty && viewModel.isLoading(selectedCategory, locations: locations) {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if items.isEmpty {
                 VStack(spacing: 8) {
@@ -83,17 +127,17 @@ struct ContentView: View {
                             ProductRowView(product: item.product, category: selectedCategory, locationName: item.location.displayName)
                         }
                     } header: {
-                        Text("\(items.count) máy · 3 khu vực")
+                        Text("\(items.count) máy · \(locations.count) khu vực")
                     }
                 }
                 .listStyle(.plain)
             }
         }
         .refreshable {
-            await viewModel.reloadCategory(selectedCategory)
+            await viewModel.reloadCategory(selectedCategory, locations: locations)
         }
-        .task(id: selectedCategory.id) {
-            await viewModel.loadCategoryIfNeeded(selectedCategory)
+        .task(id: "\(selectedCategory.id):\(selectedLocationIds.sorted().joined(separator: ","))") {
+            await viewModel.loadCategoryIfNeeded(selectedCategory, locations: locations)
         }
     }
 }
