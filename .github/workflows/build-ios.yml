@@ -1,11 +1,20 @@
 name: Build unsigned iOS IPA
 
-# Build chạy trên macOS runner của GitHub — output là .ipa CHƯA KÝ. Ký + cài thật làm ở máy
-# Windows bằng Sideloadly (Apple ID cá nhân), không ký trong CI.
+# Job "build" chạy trên macOS runner của GitHub — output là .ipa CHƯA KÝ (cài thủ công bằng Sideloadly).
+# Job "testflight" (CHỈ chạy khi bấm workflow_dispatch với release=true) ký bằng Apple Distribution + đẩy lên
+# TestFlight, copy từ AppQuanLyIOS. Cần 9 secrets trong repo: IOS_DIST_CERTIFICATE_BASE64,
+# IOS_DIST_CERTIFICATE_PASSWORD, IOS_PROVISIONING_PROFILE_BASE64, IOS_PROVISIONING_PROFILE_NAME,
+# IOS_KEYCHAIN_PASSWORD, APPLE_TEAM_ID, ASC_API_KEY_ID, ASC_API_ISSUER_ID, ASC_API_KEY_BASE64.
+# Bundle ID com.denncoffee.dmxdoitra (App ID + app record trên App Store Connect đã tạo 25/10/2026).
 on:
   push:
     branches: [main]
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Ký thật + đẩy lên TestFlight (mặc định false = bản unsigned sideload)"
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -52,3 +61,102 @@ jobs:
         with:
           name: DienMayXanhIOS-unsigned-ipa
           path: DienMayXanhIOS-unsigned.ipa
+
+  testflight:
+    if: ${{ inputs.release }}
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # App Store Connect từ 10/2026 bắt buộc build bằng iOS 26 SDK trở lên (Xcode 26+).
+      - name: Select latest stable Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      # Build number = số lần chạy workflow (luôn tăng). Version "1.0" giữ nguyên từ project.yml.
+      - name: Stamp build number into Info.plist
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${{ github.run_number }}" Sources/Info.plist
+
+      - name: Import signing certificate + provisioning profile
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.IOS_DIST_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_DIST_CERTIFICATE_PASSWORD }}
+          PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          set -e
+          CERT_PATH="$RUNNER_TEMP/dist_cert.p12"
+          PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/signing.keychain-db"
+
+          echo -n "$CERTIFICATE_BASE64" | base64 --decode -o "$CERT_PATH"
+          echo -n "$PROFILE_BASE64" | base64 --decode -o "$PROFILE_PATH"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | sed 's/"//g')
+
+          mkdir -p ~/Library/MobileDevice/"Provisioning Profiles"
+          cp "$PROFILE_PATH" ~/Library/MobileDevice/"Provisioning Profiles"/profile.mobileprovision
+
+      - name: Archive (signed, App Store distribution)
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+        run: |
+          xcodebuild archive             -project DienMayXanhIOS.xcodeproj             -scheme DienMayXanhIOS             -configuration Release             -archivePath build/DienMayXanhIOS.xcarchive             CODE_SIGN_STYLE=Manual             DEVELOPMENT_TEAM="$TEAM_ID"             PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"             CODE_SIGN_IDENTITY="Apple Distribution"
+
+      - name: Export .ipa (App Store method)
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ secrets.IOS_PROVISIONING_PROFILE_NAME }}
+        run: |
+          cat > exportOptions.plist <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>$TEAM_ID</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>com.denncoffee.dmxdoitra</key>
+              <string>$PROFILE_NAME</string>
+            </dict>
+          </dict>
+          </plist>
+          PLIST
+          xcodebuild -exportArchive             -archivePath build/DienMayXanhIOS.xcarchive             -exportPath build/export             -exportOptionsPlist exportOptions.plist
+
+      # altool (Xcode 26) có thể thoát mã 0 dù in "UPLOAD FAILED" → bắt chữ đó để job không xanh giả.
+      - name: Upload to TestFlight
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+          ASC_KEY_BASE64: ${{ secrets.ASC_API_KEY_BASE64 }}
+        run: |
+          set -e
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo -n "$ASC_KEY_BASE64" | base64 --decode -o ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          IPA_PATH=$(find build/export -maxdepth 1 -iname "*.ipa" | head -1)
+          xcrun altool --upload-app -f "$IPA_PATH" -t ios             --apiKey "$ASC_KEY_ID" --apiIssuer "$ASC_ISSUER_ID" 2>&1 | tee altool.log
+          if grep -q "UPLOAD FAILED" altool.log; then echo "altool upload that bai"; exit 1; fi
+
+      - name: Clean up keychain
+        if: always()
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true
