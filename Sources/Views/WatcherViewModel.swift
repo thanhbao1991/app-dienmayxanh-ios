@@ -12,6 +12,20 @@ final class WatcherViewModel {
 
     private(set) var states: [String: LoadState] = [:]
 
+    /// Các dòng đã vuốt ẩn (LocationProductRow.id = "khuVuc:productId") — lưu UserDefaults để mở
+    /// lại app vẫn ẩn. Ẩn theo từng khu vực: cùng mẫu máy ở khu vực khác vẫn hiện.
+    private(set) var hiddenRowIds: Set<String> = Set(UserDefaults.standard.stringArray(forKey: hiddenKey) ?? [])
+    private static let hiddenKey = "hiddenRowIds"
+
+    func setHidden(_ rowId: String, _ hidden: Bool) {
+        if hidden {
+            hiddenRowIds.insert(rowId)
+        } else {
+            hiddenRowIds.remove(rowId)
+        }
+        UserDefaults.standard.set(Array(hiddenRowIds), forKey: Self.hiddenKey)
+    }
+
     func state(_ tab: WatchTab) -> LoadState {
         states[tab.id] ?? .idle
     }

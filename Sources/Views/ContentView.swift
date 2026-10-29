@@ -4,6 +4,7 @@ struct ContentView: View {
     @State private var viewModel = WatcherViewModel()
     @State private var selectedCategory: WatchCategory = WatchCategories.all[0]
     @State private var selectedLocationIds: Set<String> = Set(WatchLocations.all.map(\.id))
+    @State private var showHidden = false
 
     private static let categoryIcons: [String: String] = [
         "may-xay-sinh-to": "drop.fill",
@@ -146,13 +147,43 @@ struct ContentView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
+                let hiddenCount = items.filter { viewModel.hiddenRowIds.contains($0.id) }.count
+                let visibleItems = showHidden ? items : items.filter { !viewModel.hiddenRowIds.contains($0.id) }
                 List {
                     Section {
-                        ForEach(items) { item in
+                        ForEach(visibleItems) { item in
+                            let isHidden = viewModel.hiddenRowIds.contains(item.id)
                             ProductRowView(product: item.product, category: selectedCategory, locationName: item.location.displayName)
+                                .opacity(isHidden ? 0.4 : 1)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    if isHidden {
+                                        Button {
+                                            withAnimation { viewModel.setHidden(item.id, false) }
+                                        } label: {
+                                            Label("Hiện lại", systemImage: "eye")
+                                        }
+                                        .tint(.blue)
+                                    } else {
+                                        Button {
+                                            withAnimation { viewModel.setHidden(item.id, true) }
+                                        } label: {
+                                            Label("Ẩn", systemImage: "eye.slash")
+                                        }
+                                        .tint(.gray)
+                                    }
+                                }
                         }
                     } header: {
-                        Text("\(items.count) máy · \(locations.count) khu vực")
+                        HStack {
+                            Text("\(items.count - hiddenCount) máy · \(locations.count) khu vực")
+                            Spacer()
+                            if hiddenCount > 0 {
+                                Button(showHidden ? "Giấu \(hiddenCount) đã ẩn" : "Xem \(hiddenCount) đã ẩn") {
+                                    withAnimation { showHidden.toggle() }
+                                }
+                                .font(.caption)
+                            }
+                        }
                     }
                 }
                 .listStyle(.plain)
