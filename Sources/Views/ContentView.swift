@@ -20,7 +20,7 @@ struct ContentView: View {
         "quat": "wind",
         "may-pha-ca-phe": "cup.and.saucer.fill",
         "bep-ga-don": "flame.circle.fill",
-        "noi-ap-suat-philips": "gauge.with.dots.needle.67percent",
+        "noi-ap-suat":"gauge.with.dots.needle.67percent",
     ]
 
     private var selectedLocations: [WatchLocation] {

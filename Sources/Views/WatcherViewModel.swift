@@ -56,7 +56,9 @@ final class WatcherViewModel {
         for attempt in 1...attempts {
             do {
                 let data = try await DmxApiClient.fetchProducts(category: tab.category, location: tab.location)
-                return data.listProductsVM
+                let brands = Set(tab.category.brandNames.map { $0.lowercased() })
+                guard !brands.isEmpty else { return data.listProductsVM }
+                return data.listProductsVM.filter { brands.contains($0.manufacture?.name.lowercased() ?? "") }
             } catch {
                 if attempt < attempts {
                     try? await Task.sleep(nanoseconds: 500_000_000)

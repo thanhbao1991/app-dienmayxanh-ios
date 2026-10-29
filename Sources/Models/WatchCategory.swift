@@ -9,6 +9,10 @@ struct WatchCategory: Identifiable, Hashable {
     /// Mô tả điều kiện lọc bằng tiếng Việt dễ hiểu (tên hãng/chất liệu...) thay vì hiện thẳng
     /// mã số g/m thô — tra 1 lần từ listManufacture của API rồi ghi cứng ở đây.
     let friendlyFilter: String
+    /// Lọc hãng theo TÊN ngay trong app (khớp đúng manufacture.name, không phân biệt hoa thường).
+    /// Dùng khi hãng cần xem CHƯA có máy đổi trả nào nên API không có mã m cho hãng đó — lọc
+    /// theo m sẽ bỏ sót, còn lọc theo tên thì hãng nào có máy là tự hiện. Rỗng = không lọc.
+    var brandNames: [String] = []
 
     /// Link web gốc khớp đúng điều kiện đang lọc (g/m) — hiện trong app để đối chiếu, bấm mở
     /// được ra Safari xem trực tiếp trên dienmayxanh.com.
@@ -34,9 +38,9 @@ enum WatchCategories {
         WatchCategory(id: "tu-dong", displayName: "Tủ đông", g: "", m: "", curl: "tu-dong", friendlyFilter: "Tất cả hãng"),
         WatchCategory(id: "lo-vi-song", displayName: "Lò vi sóng", g: "", m: "787,25912", curl: "lo-vi-song", friendlyFilter: "Panasonic, Hafele"),
         WatchCategory(id: "may-nuoc-nong", displayName: "Máy nước nóng", g: "", m: "", curl: "may-nuoc-nong", friendlyFilter: "Tất cả hãng"),
-        WatchCategory(id: "quat", displayName: "Quạt", g: "", m: "", curl: "quat", friendlyFilter: "Tất cả hãng"),
+        WatchCategory(id: "quat", displayName: "Quạt", g: "", m: "", curl: "quat", friendlyFilter: "Panasonic, Philips, AVA, Sunhouse", brandNames: ["Panasonic", "Philips", "AVA", "Sunhouse"]),
         WatchCategory(id: "may-pha-ca-phe", displayName: "Máy pha cà phê", g: "", m: "", curl: "may-pha-ca-phe", friendlyFilter: "Tất cả hãng"),
         WatchCategory(id: "bep-ga-don", displayName: "Bếp ga đơn", g: "don", m: "", curl: "bep-ga", friendlyFilter: "Bếp ga đơn"),
-        WatchCategory(id: "noi-ap-suat-philips", displayName: "Nồi áp suất Philips", g: "", m: "", curl: "noi-ap-suat-philips", friendlyFilter: "Philips"),
+        WatchCategory(id: "noi-ap-suat", displayName: "Nồi áp suất", g: "", m: "", curl: "noi-ap-suat", friendlyFilter: "Philips, Panasonic", brandNames: ["Philips", "Panasonic"]),
     ]
 }

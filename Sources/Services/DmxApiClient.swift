@@ -19,7 +19,8 @@ enum DmxApiClient {
             URLQueryItem(name: "m", value: category.m),
             URLQueryItem(name: "o", value: "2"),
             URLQueryItem(name: "r", value: ""),
-            URLQueryItem(name: "ps", value: "0"),
+            // ps = số máy mỗi trang; ps=0 chỉ trả tối đa 20 máy → mục nhiều máy bị cắt mất.
+            URLQueryItem(name: "ps", value: "500"),
             URLQueryItem(name: "pi", value: "0"),
             URLQueryItem(name: "curl", value: category.curl),
             URLQueryItem(name: "kw", value: ""),
