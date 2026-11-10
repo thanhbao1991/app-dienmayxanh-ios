@@ -34,7 +34,9 @@ enum DmxApiClient {
             URLQueryItem(name: "isHasType", value: "false"),
         ]
 
-        var request = URLRequest(url: components.url!)
+        // Mặc định URLSession chờ 60s/request; API thỉnh thoảng treo (không trả lời) khiến spinner quay
+        // mãi — 3 khu vực tuần tự × 2 lần thử có thể kẹt vài phút. Cắt 12s để retry/báo lỗi sớm.
+        var request = URLRequest(url: components.url!, timeoutInterval: 12)
         request.setValue(browserUserAgent, forHTTPHeaderField: "User-Agent")
         request.setValue("https://www.dienmayxanh.com/", forHTTPHeaderField: "Referer")
 

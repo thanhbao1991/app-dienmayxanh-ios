@@ -52,7 +52,7 @@ final class WatcherViewModel {
         }
     }
 
-    private func fetchWithRetry(_ tab: WatchTab, attempts: Int = 2) async -> [Product]? {
+    private func fetchWithRetry(_ tab: WatchTab, attempts: Int = 3) async -> [Product]? {
         for attempt in 1...attempts {
             do {
                 let data = try await DmxApiClient.fetchProducts(category: tab.category, location: tab.location)
